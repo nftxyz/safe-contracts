@@ -24,8 +24,8 @@ type UserOperation = {
     initCode: string;
     callData: string;
     callGasLimit: string;
-    verificationGasLimit: string;
-    preVerificationGas: string;
+    verificationGasLimit?: string;
+    preVerificationGas?: string;
     maxFeePerGas: string;
     maxPriorityFeePerGas: string;
     paymasterAndData: string;
@@ -76,8 +76,8 @@ describe("Safe.ERC4337", () => {
         await sleep(10000);
 
         const feeData = await provider.getFeeData();
-        const maxFeePerGas = feeData.maxFeePerGas?.toString(16);
-        const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas?.toString(16);
+        const maxFeePerGas = "0x" + (feeData.maxFeePerGas?.toString(16) || feeData.gasPrice?.toString(16));
+        const maxPriorityFeePerGas = "0x" + (feeData.maxPriorityFeePerGas?.toString(16) || feeData.gasPrice?.toString(16));
 
         if (!maxFeePerGas || !maxPriorityFeePerGas) {
             throw new Error("Could not get fee data");
@@ -104,7 +104,7 @@ describe("Safe.ERC4337", () => {
         const userOpCallData = erc4337ModuleAndHandler.interface.encodeFunctionData("execTransaction", [userWallet.address, 0, "0x"]);
 
         // Native tokens for the pre-fund 💸
-        await userWallet.sendTransaction({ to: deployedAddress, value: hre.ethers.parseEther("0.005") });
+        await userWallet.sendTransaction({ to: deployedAddress, value: hre.ethers.parseEther("0.1") });
         // The bundler uses a different node, so we need to allow it sometime to sync
         await sleep(10000);
 
@@ -114,8 +114,9 @@ describe("Safe.ERC4337", () => {
             initCode,
             callData: userOpCallData,
             callGasLimit: "0x1",
-            verificationGasLimit: "0x1",
-            preVerificationGas: "0x1",
+            // use test bundler's default value
+            // verificationGasLimit: "0x1",
+            // preVerificationGas: "0x1",
             maxFeePerGas,
             maxPriorityFeePerGas,
             paymasterAndData: "0x",
